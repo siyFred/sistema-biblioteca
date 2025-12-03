@@ -154,3 +154,18 @@ SIMPLE_JWT = {
 # Arquivos de mídia (uploads de imagens para capas)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Celery
+
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_TIMEZONE = 'America/Sao_Paulo'
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = { # roda o check_overdue_loans todo dia as 00:00
+    'check-overdue-loans-every-day': {
+        'task': 'loans.tasks.check_overdue_loans',
+        'schedule': crontab(hour=0, minute=0), 
+    },
+}
