@@ -6,6 +6,10 @@ from .models import Book
 from .serializers import BookSerializer, ISBNImportSerializer
 from .services import GoogleBooksService
 
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from .filters import BookFilter
+
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 # Schema manual para garantir upload de arquivo no Swagger
@@ -48,6 +52,12 @@ class BookViewSet(viewsets.ModelViewSet):
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     parser_classes = (MultiPartParser, FormParser)
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = BookFilter
+    search_fields = ['title', 'author', 'isbn', 'genre', 'publisher', 'description']
+    ordering_fields = ['title', 'publication_date', 'created_at', 'available_copies']
+    ordering = ['-created_at']
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
