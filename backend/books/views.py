@@ -71,7 +71,7 @@ class BookViewSet(viewsets.ModelViewSet):
         if partial:
             new_data = data.copy()
             for key, value in data.items():
-                if value == '' and key not in ['cover_image', 'cover_url']:
+                if value == '' and key not in ['cover_image']:
                      if key in new_data:
                          new_data.pop(key)
             data = new_data
