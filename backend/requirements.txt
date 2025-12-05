@@ -9,3 +9,4 @@ requests
 celery
 redis
 django-filter
+django-redis

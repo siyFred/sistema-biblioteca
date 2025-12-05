@@ -10,6 +10,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .filters import BookFilter
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 # Schema manual para garantir upload de arquivo no Swagger
@@ -81,6 +85,21 @@ class BookViewSet(viewsets.ModelViewSet):
             instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
+
+    @method_decorator(cache_page(30))
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        cache_key = f'book_detail_{instance.id}'
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+        
+        data = self.get_serializer(instance).data
+        cache.set(cache_key, data, timeout=3600)
+        return Response(data)
 
 
 class ImportBookView(views.APIView):
