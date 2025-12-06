@@ -8,6 +8,7 @@ from datetime import timedelta
 from .models import Loan
 from books.models import Book
 from .serializers import LoanSerializer
+from decimal import Decimal
 
 # Create your views here.
 
@@ -44,8 +45,29 @@ class LoanViewSet(viewsets.ModelViewSet):
             book_locked = Book.objects.select_for_update().get(pk=loan.book.pk)
             book_locked.available_copies += 1
             book_locked.save()
-            loan.return_date = timezone.now()
+            now = timezone.now()
+            loan.apply_fines_until(now)
+            loan.return_date = now
             loan.status = 'RETURNED'
             loan.save()
+
+        return Response(LoanSerializer(loan).data)
+
+    @action(detail=True, methods=['post'])
+    def pay(self, request, pk=None):
+        loan = self.get_object()
+
+        if loan.fine_amount is None or loan.fine_amount <= 0:
+            return Response({"error": "Não há multa a pagar."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if getattr(loan, 'paid', False):
+            return Response({"error": "A multa já foi paga."}, status=status.HTTP_400_BAD_REQUEST)
+
+        now = timezone.now()
+        loan.paid = True
+        loan.paid_date = now
+        loan.fine_amount = Decimal('0.00')
+        loan.fine_last_updated = now
+        loan.save()
 
         return Response(LoanSerializer(loan).data)

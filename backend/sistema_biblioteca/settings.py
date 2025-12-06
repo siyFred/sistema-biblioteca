@@ -187,3 +187,6 @@ CACHES = {
         }
     }
 }
+
+# Configuração de multas: valor diário fixo (em moeda local). Pode ser sobrescrito via .env
+FINE_DAILY_AMOUNT = os.getenv('FINE_DAILY_AMOUNT', '1.00')
