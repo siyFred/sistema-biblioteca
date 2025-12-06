@@ -25,10 +25,15 @@ class Loan(models.Model):
 
     fine_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name='Multa')
     fine_last_updated = models.DateTimeField(null=True, blank=True, verbose_name='Última atualização da multa')
+    paid = models.BooleanField(default=False, verbose_name='Multa Paga')
+    paid_date = models.DateTimeField(null=True, blank=True, verbose_name='Data do Pagamento')
 
     def apply_fines_until(self, when=None):
         if when is None:
             when = timezone.now()
+
+        if getattr(self, 'paid', False):
+            return
 
         if self.due_date >= when:
             return
