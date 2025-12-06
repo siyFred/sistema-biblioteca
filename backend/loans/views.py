@@ -44,7 +44,9 @@ class LoanViewSet(viewsets.ModelViewSet):
             book_locked = Book.objects.select_for_update().get(pk=loan.book.pk)
             book_locked.available_copies += 1
             book_locked.save()
-            loan.return_date = timezone.now()
+            now = timezone.now()
+            loan.apply_fines_until(now)
+            loan.return_date = now
             loan.status = 'RETURNED'
             loan.save()
 

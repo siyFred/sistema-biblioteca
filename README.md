@@ -38,7 +38,7 @@ Este projeto é um sistema de gerenciamento de biblioteca desenvolvido como requ
 - [x] **ACID Transactions:** Controle de integridade na criação de empréstimos.
 - [x] **Concurrency Control:** Implementação de `select_for_update` (Row locking) para evitar Race Conditions no estoque de livros.
 - [x] **Async Pipelines (Celery):** Processamento em background para notificações e relatórios pesados, evitando bloqueio da thread principal.
-- [ ] **Caching:** Cacheamento de endpoints de leitura frequente (ex: Listagem de Livros) com invalidação inteligente.
+- [x] **Caching:** Cacheamento de endpoints de leitura frequente (ex: Listagem de Livros) com invalidação inteligente.
 
 ### Frontend e UX
 
