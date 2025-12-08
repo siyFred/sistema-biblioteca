@@ -17,7 +17,7 @@ let usernameTimeout = null
 let emailTimeout = null 
 
 const form = ref({ 
-    username: '', email: '', password: '',
+    username: '', email: '', password: '', admin_code: '',
     first_name: '', last_name: '', cpf: '', phone: '',
     cep: '', street: '', number: '', complement: '', district: '', city: '', state: ''
 })
@@ -209,6 +209,11 @@ const handleRegister = async () => {
             <div class="input-group">
                 <label>Celular</label>
                 <input v-model="form.phone" @input="formatPhone" placeholder="(00) 00000-0000" required maxlength="15" />
+            </div>
+
+            <div class="input-group">
+                <label>Código de Bibliotecário (Opcional)</label>
+                <input v-model="form.admin_code" placeholder="Chave Mestra..." type="password" />
             </div>
         </div>
 

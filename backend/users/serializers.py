@@ -5,12 +5,12 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False)
-    
+    admin_code = serializers.CharField(write_only=True, required=False) # Chave secreta
+
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'email', 'password', 'role', 
+            'id', 'username', 'email', 'password', 'role', 'admin_code',
             'first_name', 'last_name', 'cpf', 'phone',
             'cep', 'street', 'number', 'complement', 'district', 'city', 'state'
         )
@@ -19,7 +19,15 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
-        validated_data['role'] = User.Role.READER
+        admin_code = validated_data.pop('admin_code', None)
+
+        # Verifica chave mestra
+        if admin_code == "BIBLIOTECA_ADMIN_2025":
+            validated_data['role'] = User.Role.LIBRARIAN
+            validated_data['is_staff'] = True
+        else:
+            validated_data['role'] = User.Role.READER
+            validated_data['is_staff'] = False
         
         user = User.objects.create_user(
             password=password,
