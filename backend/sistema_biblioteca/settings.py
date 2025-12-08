@@ -188,5 +188,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+
 # Configuração de multas: valor diário fixo (em moeda local). Pode ser sobrescrito via .env
 FINE_DAILY_AMOUNT = os.getenv('FINE_DAILY_AMOUNT', '1.00')

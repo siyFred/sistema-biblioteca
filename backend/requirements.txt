@@ -10,3 +10,4 @@ celery
 redis
 django-filter
 django-redis
+django-cors-headers
