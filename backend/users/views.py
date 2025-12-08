@@ -82,6 +82,19 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['post'])
+    def upgrade_role(self, request):
+        user = request.user
+        admin_code = request.data.get('admin_code')
+        
+        if admin_code == "BIBLIOTECA_ADMIN_2025":
+            user.role = 'LIBRARIAN'
+            user.is_staff = True
+            user.save()
+            return Response({'status': 'Promovido a Bibliotecário com sucesso!'})
+        
+        return Response({'error': 'Chave inválida.'}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def promote(self, request, pk=None):
         user = self.get_object()

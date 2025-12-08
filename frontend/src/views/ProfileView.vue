@@ -3,6 +3,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import api from '../services/api'
 import { useAlert } from '../utils/alert'
+import Swal from 'sweetalert2'
 
 const swal = useAlert()
 const auth = useAuthStore()
@@ -52,6 +53,29 @@ const saveProfile = async () => {
     console.error("Erro ao salvar:", e)
     swal.error('Erro', 'Erro ao salvar perfil.')
   }
+}
+
+const upgradeAccount = async () => {
+    const { value: code } = await Swal.fire({
+        title: 'Área Restrita',
+        text: 'Digite a chave de administrador para se tornar Bibliotecário.',
+        input: 'password',
+        inputPlaceholder: 'Chave Mestra...',
+        showCancelButton: true,
+        confirmButtonText: 'Validar',
+        confirmButtonColor: '#2c3e50',
+        cancelButtonText: 'Cancelar'
+    })
+
+    if (code) {
+        try {
+            await api.post('users/upgrade_role/', { admin_code: code })
+            await Swal.fire('Sucesso!', 'Perfil atualizado. Bem-vindo, Bibliotecário!', 'success')
+            window.location.reload()
+        } catch (e) {
+            Swal.fire('Erro', 'Chave inválida.', 'error')
+        }
+    }
 }
 
 onMounted(fetchProfile)
@@ -152,6 +176,18 @@ onMounted(fetchProfile)
           </div>
         </section>
 
+        <hr v-if="!auth.isLibrarian" />
+
+        <section v-if="!auth.isLibrarian" class="form-section">
+            <h3>🛡️ Área Administrativa</h3>
+             <div class="admin-box">
+                <p>Possui uma chave de administrador?</p>
+                <button type="button" @click="upgradeAccount" class="btn-admin">
+                    🔑 Tornar-se Bibliotecário
+                </button>
+            </div>
+        </section>
+
         <div class="actions">
           <button type="submit" class="btn-save">Salvar Alterações</button>
         </div>
@@ -216,4 +252,17 @@ hr { margin: 30px 0; border: none; border-top: 1px solid #eee; }
 .btn-save:hover { background: #3aa876; transform: translateY(-1px); }
 
 .loading { text-align: center; padding: 50px; color: #7f8c8d; font-size: 1.2rem; }
+
+.admin-box { 
+    background: #f8f9fa; padding: 20px; border-radius: 8px; 
+    border: 1px dashed #bdc3c7; display: flex; 
+    justify-content: space-between; align-items: center; 
+    flex-wrap: wrap; gap: 10px;
+}
+.admin-box p { margin: 0; color: #555; }
+.btn-admin { 
+    background: #2c3e50; color: white; padding: 10px 15px; border-radius: 6px; 
+    cursor: pointer; border: none; font-weight: bold; transition: 0.2s;
+}
+.btn-admin:hover { background: #34495e; }
 </style>
