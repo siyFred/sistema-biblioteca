@@ -185,27 +185,28 @@ const goToDetail = (book) => {
 <template>
   <div class="page-container">
     <div class="header">
-      <h1>📖 Acervo da Biblioteca</h1>
-      <router-link v-if="auth.isLibrarian" to="/books/new" class="btn-add">+ Novo Livro</router-link>
+      <h1 class="page-title">📖 Acervo da Biblioteca</h1>
+      <router-link v-if="auth.isLibrarian" to="/books/new" class="btn btn-primary">+ Novo Livro</router-link>
     </div>
 
-    <div class="controls-section">
+    <div class="controls-section card">
         <div class="search-bar">
             <input 
                 v-model="search" 
                 @keyup.enter="fetchBooks(false)" 
+                class="input search-input"
                 placeholder="Pesquise no nosso acervo..." 
             />
-            <button @click="fetchBooks(false)">🔍</button>
+            <button @click="fetchBooks(false)" class="btn btn-primary">🔍</button>
         </div>
 
-        <button @click="showFilterModal = true" class="btn-filter">
+        <button @click="showFilterModal = true" class="btn btn-outline">
             ⚡ Filtrar / Ordenar
         </button>
 
         <label class="checkbox-label">
             <input type="checkbox" v-model="onlyAvailable">
-            Só Disponíveis
+            <span class="ml-2">Só Disponíveis</span>
         </label>
     </div>
 
@@ -217,26 +218,39 @@ const goToDetail = (book) => {
         @click="goToDetail(book)" 
       >
         <div class="card-badges">
-            <span v-if="book.status_usuario === 'solicitado'" class="badge badge-yellow">⏳ Aguardando</span>
-            <span v-else-if="book.status_usuario === 'alugado'" class="badge badge-green">📖 Lendo</span>
+            <span v-if="book.status_usuario === 'solicitado'" class="badge badge-warning">⏳ Aguardando</span>
+            <span v-else-if="book.status_usuario === 'alugado'" class="badge badge-success">📖 Lendo</span>
         </div>
 
         <div class="image-wrapper">
             <img :src="getCover(book)" class="cover" :alt="book.title" />
+            <div class="overlay">
+                <span class="view-details">Ver Detalhes</span>
+            </div>
         </div>
 
         <div class="info">
-          <h3>{{ book.title }}</h3>
+          <h3 :title="book.title">{{ book.title }}</h3>
           <p class="author">{{ book.author }}</p>
           
           <div class="actions">
-                <span class="stock" :class="{ 'red': book.available_copies === 0 }">{{ book.available_copies }} disp.</span>
+                <span class="stock" :class="{ 'text-danger': book.available_copies === 0 }">
+                    {{ book.available_copies }} disp.
+                </span>
+                
                 <div v-if="!auth.isLibrarian" @click.stop>
-                    <button v-if="canRent(book)" @click="rentBook(book, $event)" class="btn-rent">Alugar</button>
-                    <button v-else-if="book.available_copies === 0" disabled class="btn-rent disabled">Esgotado</button>
+                    <button v-if="canRent(book)" @click="rentBook(book, $event)" class="btn btn-sm btn-primary">Alugar</button>
+                    <button v-else-if="book.available_copies === 0" disabled class="btn btn-sm btn-disabled">Esgotado</button>
                     <span v-else class="status-text">Indisponível</span>
                 </div>
-                <button v-if="auth.isLibrarian" @click.stop="$router.push(`/books/${book.id}/edit`)" class="btn-edit-small">✏️</button>
+                
+                <button 
+                    v-if="auth.isLibrarian" 
+                    @click.stop="$router.push(`/books/${book.id}/edit`)" 
+                    class="btn btn-sm btn-outline icon-btn"
+                >
+                    ✏️
+                </button>
           </div>
         </div>
       </div>
@@ -249,7 +263,7 @@ const goToDetail = (book) => {
 
     <div class="suggestion-banner" v-if="!loading">
         <p>Não encontrou o que queria?</p>
-        <button @click="showModal = true" class="btn-external">
+        <button @click="showModal = true" class="btn btn-accent">
             🌎 Buscar em Outras Bibliotecas 
         </button>
     </div>
@@ -257,164 +271,178 @@ const goToDetail = (book) => {
     <div ref="sentinel" class="infinite-sentinel"></div>
 
     <!-- MODAL DE FILTROS -->
-    <div v-if="showFilterModal" class="modal-overlay" @click.self="showFilterModal = false">
-        <div class="modal-content narrow">
-            <div class="modal-header">
-                <h2>⚡ Configurar Busca</h2>
-                <button class="close-btn" @click="showFilterModal = false">&times;</button>
-            </div>
-
-            <div class="filter-section">
-                <h3>Ordenação</h3>
-                <div class="radio-group">
-                    <label v-for="opt in SORT_OPTIONS" :key="opt.value" class="radio-label">
-                        <input type="radio" v-model="sortBy" :value="opt.value">
-                        {{ opt.label }}
-                    </label>
+    <Transition name="modal">
+        <div v-if="showFilterModal" class="modal-overlay" @click.self="showFilterModal = false">
+            <div class="modal-content narrow">
+                <div class="modal-header">
+                    <h2>⚡ Configurar Busca</h2>
+                    <button class="close-btn" @click="showFilterModal = false">&times;</button>
                 </div>
-            </div>
 
-            <div class="filter-section">
-                <h3>Gênero</h3>
-                <select v-model="selectedGenre" class="full-select">
-                    <option v-for="g in GENRES" :key="g.value" :value="g.value">
-                        {{ g.label }}
-                    </option>
-                </select>
-            </div>
-
-            <div class="filter-section">
-                <h3>Ano de Publicação</h3>
-                <div class="row">
-                    <input v-model="minYear" type="number" placeholder="De (Ano)" class="year-input">
-                    <input v-model="maxYear" type="number" placeholder="Até (Ano)" class="year-input">
-                </div>
-            </div>
-
-            <button @click="applyFilters" class="btn-apply">Aplicar Filtros</button>
-        </div>
-    </div>
-
-    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🌎 Buscar na Rede Externa</h2>
-                <button class="close-btn" @click="showModal = false">&times;</button>
-            </div>
-            
-            <div class="external-search-box">
-                <input 
-                    v-model="googleSearch" 
-                    placeholder="Digite o nome do livro ou autor..." 
-                    @keyup.enter="fetchGoogleBooks"
-                />
-                <button @click="fetchGoogleBooks">Buscar</button>
-            </div>
-
-            <div class="results-list">
-                <div v-if="loadingGoogle" class="loading-google">Carregando sugestões...</div>
-                
-                <div v-else-if="googleBooks.length > 0" class="google-grid">
-                    <div v-for="book in googleBooks" :key="book.google_id" class="google-item">
-                        <img :src="book.cover_url || 'https://via.placeholder.com/80x120'" class="mini-cover" />
-                        <div class="google-info">
-                            <h4>{{ book.title }}</h4>
-                            <p>{{ book.author }}</p>
-                            <button @click="suggestPurchase(book)" class="btn-request">💡 Solicitar Compra</button>
-                        </div>
+                <div class="filter-section">
+                    <h3>Ordenação</h3>
+                    <div class="radio-group">
+                        <label v-for="opt in SORT_OPTIONS" :key="opt.value" class="radio-label">
+                            <input type="radio" v-model="sortBy" :value="opt.value">
+                            {{ opt.label }}
+                        </label>
                     </div>
                 </div>
 
-                <div v-else-if="googleSearch && !loadingGoogle" class="empty-google">
-                    Nenhum resultado externo encontrado.
+                <div class="filter-section">
+                    <h3>Gênero</h3>
+                    <select v-model="selectedGenre" class="input full-select">
+                        <option v-for="g in GENRES" :key="g.value" :value="g.value">
+                            {{ g.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Ano de Publicação</h3>
+                    <div class="row">
+                        <input v-model="minYear" type="number" placeholder="De (Ano)" class="input year-input">
+                        <input v-model="maxYear" type="number" placeholder="Até (Ano)" class="input year-input">
+                    </div>
+                </div>
+
+                <button @click="applyFilters" class="btn btn-primary w-full">Aplicar Filtros</button>
+            </div>
+        </div>
+    </Transition>
+
+    <Transition name="modal">
+        <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🌎 Buscar na Rede Externa</h2>
+                    <button class="close-btn" @click="showModal = false">&times;</button>
+                </div>
+                
+                <div class="external-search-box">
+                    <input 
+                        v-model="googleSearch" 
+                        placeholder="Digite o nome do livro ou autor..." 
+                        @keyup.enter="fetchGoogleBooks"
+                        class="input"
+                    />
+                    <button @click="fetchGoogleBooks" class="btn btn-primary">Buscar</button>
+                </div>
+
+                <div class="results-list">
+                    <div v-if="loadingGoogle" class="loading-google">Carregando sugestões...</div>
+                    
+                    <div v-else-if="googleBooks.length > 0" class="google-grid">
+                        <div v-for="book in googleBooks" :key="book.google_id" class="google-item card">
+                            <img :src="book.cover_url || 'https://via.placeholder.com/80x120'" class="mini-cover" />
+                            <div class="google-info">
+                                <h4>{{ book.title }}</h4>
+                                <p>{{ book.author }}</p>
+                                <button @click="suggestPurchase(book)" class="btn btn-sm btn-accent">💡 Solicitar Compra</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else-if="googleSearch && !loadingGoogle" class="empty-google">
+                        Nenhum resultado externo encontrado.
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </Transition>
     
   </div>
 </template>
 
 <style scoped>
-.page-container { padding-bottom: 50px; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.btn-add { background: #2c3e50; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; font-weight: bold; }
+.page-container { padding-bottom: 60px; }
 
-.controls-section { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; align-items: center; }
-.search-bar { flex: 2; display: flex; gap: 5px; min-width: 300px; }
-.search-bar input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
-.search-bar button { padding: 0 20px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1.2rem; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.page-title { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin: 0; }
 
-.btn-filter { background: #ecf0f1; border: 1px solid #bdc3c7; color: #2c3e50; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-.btn-filter:hover { background: #dfe6e9; border-color: #95a5a6; }
-
-.checkbox-label { display: flex; align-items: center; gap: 5px; font-weight: bold; font-size: 0.9rem; color: #2c3e50; cursor: pointer; user-select: none; }
-.checkbox-label input { width: 18px; height: 18px; cursor: pointer; }
-
-/* ESTILOS DO MODAL DE FILTROS */
-.modal-content.narrow { max-width: 400px; }
-.filter-section { margin-bottom: 25px; }
-.filter-section h3 { font-size: 1rem; color: #7f8c8d; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-.radio-group { display: flex; flex-direction: column; gap: 10px; }
-.radio-label { display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: 0.95rem; color: #2c3e50; }
-.full-select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-.row { display: flex; gap: 10px; }
-.year-input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-.btn-apply { width: 100%; background: #2c3e50; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-.btn-apply:hover { background: #42b883; }
-
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; margin-bottom: 40px; }
-
-.book-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08); cursor: pointer; transition: transform 0.2s; position: relative; border: 1px solid transparent; }
-.book-card:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
-
-.card-badges { position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
-.badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-.badge-yellow { background: #f1c40f; color: #fff; }
-.badge-green { background: #27ae60; color: #fff; }
-
-.image-wrapper { height: 260px; overflow: hidden; background: #f0f0f0; display: flex; align-items: center; justify-content: center; }
-.cover { width: 100%; height: 100%; object-fit: cover; }
-
-.info { padding: 15px; }
-.info h3 { margin: 0 0 5px 0; font-size: 1rem; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.author { font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.actions { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-.stock { font-weight: bold; color: #27ae60; font-size: 0.8rem; }
-.stock.red { color: #e74c3c; }
-
-.btn-rent { background: #2c3e50; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; }
-.btn-rent:hover { background: #42b883; }
-.btn-rent.disabled { background: #ccc; cursor: not-allowed; }
-.btn-edit-small { background: #f39c12; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-
-.suggestion-banner {
-    background: #eef2f5; border: 1px dashed #bdc3c7; border-radius: 8px; padding: 20px; text-align: center; margin-top: 20px; grid-column: 1 / -1;
+.controls-section { 
+    display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; align-items: center; 
+    background: white; padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); 
 }
-.suggestion-banner p { font-size: 1.1rem; color: #2c3e50; font-weight: bold; margin-bottom: 10px; }
-.btn-external { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 5px; font-size: 1rem; transition: 0.2s; }
-.btn-external:hover { background: #2980b9; transform: scale(1.05); }
 
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s; }
-.modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7f8c8d; }
+.search-bar { flex: 2; display: flex; gap: 10px; min-width: 300px; }
+.search-input { border-radius: 50px; padding-left: 20px; }
 
-.external-search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-.external-search-box input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; }
-.external-search-box button { padding: 0 20px; background: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+.checkbox-label { display: flex; align-items: center; font-weight: 600; font-size: 0.95rem; color: var(--text-main); cursor: pointer; user-select: none; }
+.checkbox-label input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); }
+.ml-2 { margin-left: 8px; }
 
-.google-grid { display: flex; flex-direction: column; gap: 15px; }
-.google-item { display: flex; gap: 15px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; align-items: center; }
-.mini-cover { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; background: #eee; }
-.google-info { flex: 1; }
-.google-info h4 { margin: 0 0 5px 0; color: #2c3e50; font-size: 1rem; }
-.google-info p { margin: 0 0 10px 0; color: #7f8c8d; font-size: 0.85rem; }
-.btn-request { background: #e67e22; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
-.btn-request:hover { background: #d35400; }
+/* GRID LIVROS */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; margin-bottom: 50px; }
 
-.loading-bar, .loading-google { text-align: center; padding: 20px; color: #999; }
-.empty-state, .empty-google { text-align: center; padding: 20px; color: #999; }
-.infinite-sentinel { height: 10px; }
+.book-card { 
+    background: white; 
+    border-radius: var(--radius-md); 
+    overflow: hidden; 
+    box-shadow: var(--shadow-sm); 
+    cursor: pointer; 
+    transition: all 0.3s ease; 
+    border: 1px solid rgba(0,0,0,0.03); 
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.book-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+
+.card-badges { position: absolute; top: 12px; right: 12px; z-index: 10; display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+.badge { padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-warning { background: var(--warning); color: #fff; }
+.badge-success { background: var(--accent); color: #fff; }
+
+.image-wrapper { 
+    height: 280px; 
+    overflow: hidden; 
+    background: #f8f9fa; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    position: relative;
+}
+
+.cover { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.book-card:hover .cover { transform: scale(1.05); }
+
+/* Overlay no hover da imagem */
+.overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(44, 62, 80, 0.4);
+    opacity: 0;
+    transition: opacity 0.3s;
+    display: flex; align-items: center; justify-content: center;
+}
+.book-card:hover .overlay { opacity: 1; }
+.view-details { color: white; font-weight: bold; border: 2px solid white; padding: 8px 16px; border-radius: 20px; backdrop-filter: blur(2px); }
+
+.info { padding: 18px; display: flex; flex-direction: column; flex: 1; }
+.info h3 { margin: 0 0 6px 0; font-size: 1.05rem; color: var(--text-main); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.author { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.actions { margin-top: auto; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+.stock { font-weight: 700; color: var(--accent); font-size: 0.8rem; background: rgba(66, 184, 131, 0.1); padding: 4px 8px; border-radius: 4px; }
+.stock.text-danger { color: var(--danger); background: rgba(231, 76, 60, 0.1); }
+
+.btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+.btn-disabled { background: #e0e0e0; color: #999; cursor: not-allowed; border: none; }
+.icon-btn { padding: 6px 10px; }
+
+/* SUGGESTION BANNER */
+.suggestion-banner {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
+    border-radius: var(--radius-md); 
+    padding: 30px; 
+    text-align: center; 
+    margin-top: 20px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+.suggestion-banner p { font-size: 1.2rem; color: var(--text-main); font-weight: 600; margin-bottom: 15px; }
+
+/* MODAL OVERRIDES */
+.modal-content.narrow { max-width: 400px; }
+
 </style>

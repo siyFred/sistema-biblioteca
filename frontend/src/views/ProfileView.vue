@@ -84,14 +84,14 @@ onMounted(fetchProfile)
 <template>
   <div class="profile-page">
     
-    <div class="profile-header">
+    <div class="profile-header card">
       <div class="avatar-circle">
         {{ form.first_name ? form.first_name.charAt(0).toUpperCase() : auth.user?.username?.charAt(0).toUpperCase() }}
       </div>
       <div class="header-info">
         <h2>{{ form.first_name }} {{ form.last_name }}</h2>
         <p class="subtitle">@{{ form.username || auth.user?.username }}</p>
-        <span class="role-badge">
+        <span class="role-badge" :class="auth.isLibrarian ? 'badge-admin' : 'badge-user'">
             {{ auth.isLibrarian ? '🛡️ Bibliotecário' : '📖 Leitor' }}
         </span>
       </div>
@@ -99,7 +99,7 @@ onMounted(fetchProfile)
 
     <div v-if="loading" class="loading">Carregando informações...</div>
 
-    <div v-else class="form-container">
+    <div v-else class="form-container card">
       <form @submit.prevent="saveProfile">
         
         <section class="form-section">
@@ -107,28 +107,28 @@ onMounted(fetchProfile)
           <div class="grid-layout">
             
             <div class="form-group">
-              <label>Nome</label>
-              <input v-model="form.first_name" type="text" placeholder="Seu nome" />
+              <label class="label">Nome</label>
+              <input v-model="form.first_name" type="text" class="input" placeholder="Seu nome" />
             </div>
 
             <div class="form-group">
-              <label>Sobrenome</label>
-              <input v-model="form.last_name" type="text" placeholder="Seu sobrenome" />
+              <label class="label">Sobrenome</label>
+              <input v-model="form.last_name" type="text" class="input" placeholder="Seu sobrenome" />
             </div>
 
             <div class="form-group">
-              <label>E-mail (Não editável)</label>
-              <input v-model="form.email" type="email" disabled class="disabled-input" />
+              <label class="label">E-mail (Não editável)</label>
+              <input v-model="form.email" type="email" disabled class="input disabled-input" />
             </div>
 
             <div class="form-group">
-              <label>CPF</label>
-              <input v-model="form.cpf" type="text" placeholder="000.000.000-00" />
+              <label class="label">CPF</label>
+              <input v-model="form.cpf" type="text" class="input" placeholder="000.000.000-00" />
             </div>
 
             <div class="form-group">
-              <label>Telefone</label>
-              <input v-model="form.phone" type="text" placeholder="(00) 00000-0000" />
+              <label class="label">Telefone</label>
+              <input v-model="form.phone" type="text" class="input" placeholder="(00) 00000-0000" />
             </div>
           </div>
         </section>
@@ -140,38 +140,38 @@ onMounted(fetchProfile)
           <div class="grid-layout">
             
             <div class="form-group">
-              <label>CEP</label>
-              <input v-model="form.cep" type="text" placeholder="00000-000" />
+              <label class="label">CEP</label>
+              <input v-model="form.cep" type="text" class="input" placeholder="00000-000" />
             </div>
 
             <div class="form-group span-2">
-              <label>Rua / Avenida</label>
-              <input v-model="form.street" type="text" />
+              <label class="label">Rua / Avenida</label>
+              <input v-model="form.street" type="text" class="input" />
             </div>
 
             <div class="form-group">
-              <label>Número</label>
-              <input v-model="form.number" type="text" />
+              <label class="label">Número</label>
+              <input v-model="form.number" type="text" class="input" />
             </div>
 
             <div class="form-group">
-              <label>Complemento</label>
-              <input v-model="form.complement" type="text" />
+              <label class="label">Complemento</label>
+              <input v-model="form.complement" type="text" class="input" />
             </div>
 
             <div class="form-group">
-              <label>Bairro</label>
-              <input v-model="form.district" type="text" />
+              <label class="label">Bairro</label>
+              <input v-model="form.district" type="text" class="input" />
             </div>
 
             <div class="form-group">
-              <label>Cidade</label>
-              <input v-model="form.city" type="text" />
+              <label class="label">Cidade</label>
+              <input v-model="form.city" type="text" class="input" />
             </div>
 
             <div class="form-group">
-              <label>Estado (UF)</label>
-              <input v-model="form.state" type="text" maxlength="2" placeholder="UF" />
+              <label class="label">Estado (UF)</label>
+              <input v-model="form.state" type="text" maxlength="2" class="input" placeholder="UF" />
             </div>
           </div>
         </section>
@@ -182,14 +182,14 @@ onMounted(fetchProfile)
             <h3>🛡️ Área Administrativa</h3>
              <div class="admin-box">
                 <p>Possui uma chave de administrador?</p>
-                <button type="button" @click="upgradeAccount" class="btn-admin">
+                <button type="button" @click="upgradeAccount" class="btn btn-primary">
                     🔑 Tornar-se Bibliotecário
                 </button>
             </div>
         </section>
 
         <div class="actions">
-          <button type="submit" class="btn-save">Salvar Alterações</button>
+          <button type="submit" class="btn btn-accent">Salvar Alterações</button>
         </div>
 
       </form>
@@ -198,71 +198,64 @@ onMounted(fetchProfile)
 </template>
 
 <style scoped>
-.profile-page { max-width: 800px; margin: 0 auto; padding: 20px; font-family: 'Segoe UI', sans-serif; }
+.profile-page { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
 
 .profile-header { 
-    display: flex; align-items: center; gap: 20px; 
-    background: white; padding: 30px; border-radius: 12px; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px;
+    display: flex; align-items: center; gap: 25px; 
+    margin-bottom: 30px;
 }
 
 .avatar-circle {
-    width: 80px; height: 80px; background: #2c3e50; color: white;
-    font-size: 2.5rem; font-weight: bold; display: flex; 
+    width: 90px; height: 90px; background: var(--primary); color: white;
+    font-size: 2.5rem; font-weight: 800; display: flex; 
     align-items: center; justify-content: center; border-radius: 50%;
+    box-shadow: var(--shadow-sm);
 }
 
-.header-info h2 { margin: 0; color: #2c3e50; font-size: 1.5rem; }
-.subtitle { color: #7f8c8d; margin: 5px 0 10px; }
+.header-info h2 { margin: 0; color: var(--primary); font-size: 1.8rem; font-weight: 700; }
+.subtitle { color: var(--text-muted); margin: 5px 0 12px; font-size: 1rem; }
 .role-badge { 
-    background: #e0f2f1; color: #00695c; padding: 5px 12px; 
-    border-radius: 20px; font-size: 0.85rem; font-weight: bold; 
+    padding: 6px 14px; 
+    border-radius: 20px; font-size: 0.85rem; font-weight: 700; 
     display: inline-block;
+    text-transform: uppercase; letter-spacing: 0.5px;
 }
+.badge-admin { background: rgba(52, 73, 94, 0.1); color: var(--primary); }
+.badge-user { background: rgba(66, 184, 131, 0.1); color: var(--accent); }
 
-.form-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.form-container { background: white; border-radius: 12px; }
 
-.form-section h3 { margin-bottom: 20px; color: #2c3e50; border-left: 4px solid #42b883; padding-left: 10px; }
+.form-section h3 { 
+    margin-bottom: 25px; color: var(--text-main); 
+    border-left: 5px solid var(--accent); padding-left: 15px; 
+    font-size: 1.2rem; font-weight: 700;
+}
 
 .grid-layout { 
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-    gap: 20px; 
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+    gap: 25px; 
 }
 
-.form-group { display: flex; flex-direction: column; gap: 5px; }
-.form-group label { font-size: 0.9rem; font-weight: 600; color: #555; }
-.form-group input { 
-    padding: 10px; border: 1px solid #ddd; border-radius: 6px; 
-    font-size: 1rem; transition: border 0.2s; 
-}
-.form-group input:focus { border-color: #42b883; outline: none; box-shadow: 0 0 0 3px rgba(66, 184, 131, 0.1); }
-.disabled-input { background: #f9f9f9; color: #999; cursor: not-allowed; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
+
+.disabled-input { background: #f9f9f9; color: #999; cursor: not-allowed; border-color: #eee; }
 
 .span-2 { grid-column: span 2; }
 @media (max-width: 600px) { .span-2 { grid-column: span 1; } }
 
-hr { margin: 30px 0; border: none; border-top: 1px solid #eee; }
+hr { margin: 40px 0; border: none; border-top: 1px solid var(--border-color); }
 
-.actions { text-align: right; margin-top: 20px; }
-.btn-save { 
-    background: #42b883; color: white; border: none; 
-    padding: 12px 25px; border-radius: 6px; font-size: 1rem; 
-    font-weight: bold; cursor: pointer; transition: background 0.2s; 
-}
-.btn-save:hover { background: #3aa876; transform: translateY(-1px); }
+.actions { text-align: right; margin-top: 30px; }
 
-.loading { text-align: center; padding: 50px; color: #7f8c8d; font-size: 1.2rem; }
+.loading { text-align: center; padding: 50px; color: var(--text-muted); font-size: 1.1rem; }
 
 .admin-box { 
-    background: #f8f9fa; padding: 20px; border-radius: 8px; 
-    border: 1px dashed #bdc3c7; display: flex; 
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+    padding: 25px; border-radius: var(--radius-md); 
+    border: 1px dashed var(--border-color); display: flex; 
     justify-content: space-between; align-items: center; 
-    flex-wrap: wrap; gap: 10px;
+    flex-wrap: wrap; gap: 15px;
 }
-.admin-box p { margin: 0; color: #555; }
-.btn-admin { 
-    background: #2c3e50; color: white; padding: 10px 15px; border-radius: 6px; 
-    cursor: pointer; border: none; font-weight: bold; transition: 0.2s;
-}
-.btn-admin:hover { background: #34495e; }
+.admin-box p { margin: 0; color: var(--text-main); font-weight: 600; }
 </style>

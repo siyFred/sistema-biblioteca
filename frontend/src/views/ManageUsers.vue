@@ -141,41 +141,46 @@ onMounted(fetchUsers)
       </tbody>
     </table>
 
-    <div v-if="editingUser" class="modal-overlay" @click.self="editingUser = null">
-      <div class="modal">
-        <h3>Editando: {{ editingUser.username }}</h3>
-        
-        <form @submit.prevent="saveUser">
-            <div class="form-group">
-                <label>E-mail</label>
-                <input v-model="form.email" type="email" />
-            </div>
-
-            <div class="form-group">
-                <label>Nome</label>
-                <input v-model="form.first_name" type="text" />
+    <Transition name="modal">
+        <div v-if="editingUser" class="modal-overlay" @click.self="editingUser = null">
+          <div class="modal-content narrow">
+            <div class="modal-header">
+                <h2>✏️ Editando: {{ editingUser.username }}</h2>
+                <button class="close-btn" @click="editingUser = null">&times;</button>
             </div>
             
-            <div class="form-group">
-                <label>Sobrenome</label>
-                <input v-model="form.last_name" type="text" />
-            </div>
+            <form @submit.prevent="saveUser">
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input v-model="form.email" type="email" class="input" />
+                </div>
 
-            <div class="form-group">
-                <label>Cargo</label>
-                <select v-model="form.role">
-                    <option value="READER">Leitor</option>
-                    <option value="LIBRARIAN">Bibliotecário</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input v-model="form.first_name" type="text" class="input" />
+                </div>
+                
+                <div class="form-group">
+                    <label>Sobrenome</label>
+                    <input v-model="form.last_name" type="text" class="input" />
+                </div>
 
-            <div class="modal-actions">
-                <button type="button" @click="editingUser = null" class="btn-cancel">Cancelar</button>
-                <button type="submit" class="btn-save">Salvar</button>
-            </div>
-        </form>
-      </div>
-    </div>
+                <div class="form-group">
+                    <label>Cargo</label>
+                    <select v-model="form.role" class="input">
+                        <option value="READER">Leitor</option>
+                        <option value="LIBRARIAN">Bibliotecário</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" @click="editingUser = null" class="btn btn-outline" style="margin-right: 10px;">Cancelar</button>
+                    <button type="submit" class="btn btn-accent">Salvar</button>
+                </div>
+            </form>
+          </div>
+        </div>
+    </Transition>
 
   </div>
 </template>
@@ -213,13 +218,10 @@ h1 { color: #2c3e50; margin: 0; }
 
 .btn-edit { background: #ffb74d; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
 .btn-edit:hover { background: #f57c00; }
-.btn-save { background: #42b883; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
-.btn-cancel { background: #ccc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px; }
 
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-.modal { background: white; padding: 30px; border-radius: 8px; width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+/* MODAL OVERRIDES */
+.modal-content.narrow { max-width: 400px; }
 .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
 .form-group label { margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
-.form-group input, .form-group select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
 .modal-actions { margin-top: 20px; text-align: right; }
 </style>
