@@ -15,10 +15,11 @@ class UserSerializer(serializers.ModelSerializer):
             'cep', 'street', 'number', 'complement', 'district', 'city', 'state'
         )
 
+        read_only_fields = ('role',) 
+
     def create(self, validated_data):
         password = validated_data.pop('password', None)
-        if 'role' not in validated_data:
-            validated_data['role'] = User.Role.READER
+        validated_data['role'] = User.Role.READER
         
         user = User.objects.create_user(
             password=password,
@@ -27,6 +28,9 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
+        validated_data.pop('email', None) 
+        validated_data.pop('role', None)
+        
         password = validated_data.pop('password', None)
         if password:
             instance.set_password(password)
@@ -37,6 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
+        
         data['user'] = {
             'id': self.user.id,
             'username': self.user.username,

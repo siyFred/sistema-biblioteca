@@ -1,48 +1,27 @@
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView
+from .views import (
+    RegisterView, 
+    UserViewSet, 
+    CustomLoginView, 
+    check_username, 
+    check_email, 
+    dashboard_stats
+)
 
-User = get_user_model()
+# Router padrão
+router = DefaultRouter()
+router.register(r'', UserViewSet, basename='user')
 
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False)
+urlpatterns = [
+    # Rotas específicas (Autenticação e Utilitários)
+    path('register/', RegisterView.as_view(), name='register'),
+    path('login/', CustomLoginView.as_view(), name='login'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('check-username/', check_username, name='check_username'),
+    path('check-email/', check_email, name='check_email'),
+    path('dashboard/', dashboard_stats, name='dashboard_stats'),
     
-    class Meta:
-        model = User
-        fields = (
-            'id', 'username', 'email', 'password', 'role', 
-            'first_name', 'last_name', 'cpf', 'phone',
-            'cep', 'street', 'number', 'complement', 'district', 'city', 'state'
-        )
-
-    def create(self, validated_data):
-        password = validated_data.pop('password', None)
-        if 'role' not in validated_data:
-            validated_data['role'] = User.Role.READER
-        
-        user = User.objects.create_user(
-            password=password,
-            **validated_data
-        )
-        return user
-
-    def update(self, instance, validated_data):
-        password = validated_data.pop('password', None)
-        if password:
-            instance.set_password(password)
-        
-        return super().update(instance, validated_data)
-
-
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data['user'] = {
-            'id': self.user.id,
-            'username': self.user.username,
-            'email': self.user.email,
-            'first_name': self.user.first_name,
-            'role': self.user.role,
-            'is_superuser': self.user.is_superuser
-        }
-        return data
+    path('', include(router.urls)),
+]
