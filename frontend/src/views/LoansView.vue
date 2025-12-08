@@ -36,6 +36,9 @@ const isDateOverdue = (dateString) => {
 }
 
 const getStatusLabel = (loan) => {
+    if (loan.status === 'RETURNED' && loan.fine_amount > 0 && !loan.paid) {
+      return { text: 'Multa Pendente', class: 'badge-fine-pending' }
+    }
     if (loan.status === 'PENDING') return { text: 'Aguardando Aprovação', class: 'badge-pending' }
     if (loan.status === 'REJECTED') return { text: 'Rejeitado', class: 'badge-rejected' }
     if (loan.status === 'RETURNED') return { text: 'Devolvido', class: 'badge-returned' }
@@ -57,6 +60,17 @@ const returnBook = async (id) => {
   } catch (e) { 
       swal.error('Erro', 'Erro na devolução') 
   }
+}
+
+const payFine = async (loanId) => {
+    if (!(await swal.confirm("Confirmar pagamento da multa?"))) return
+    try {
+        await api.post(`loans/${loanId}/pay/`)
+        swal.success('Multa paga com sucesso!')
+        fetchLoans()
+    } catch (e) {
+        swal.error('Erro', 'Não foi possível processar o pagamento.')
+    }
 }
 
 const renewBook = async (id) => {
@@ -95,8 +109,9 @@ onMounted(fetchLoans)
             <th>Livro</th>
             <th>Retirada</th>
             <th>Vencimento</th>
+            <th>Multa</th>
             <th>Status</th>
-            <th v-if="currentFilter === 'active'">Ações</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -108,16 +123,23 @@ onMounted(fetchLoans)
                 {{ formatDate(loan.due_date) }}
             </td>
             
+            <td>R$ {{ loan.fine_amount || '0.00' }}</td>
+
             <td>
                 <span :class="['badge', getStatusLabel(loan).class]">
                     {{ getStatusLabel(loan).text }}
                 </span>
             </td>
 
-            <td v-if="currentFilter === 'active'" class="actions-cell">
+            <td class="actions-cell">
               <div v-if="loan.status === 'ACTIVE' || loan.status === 'OVERDUE'" class="btn-group">
                   <button @click="returnBook(loan.id)" class="btn-return" title="Devolver">Devolver</button>
               </div>
+
+              <div v-if="loan.fine_amount > 0 && !loan.paid" class="btn-group">
+                  <button @click="payFine(loan.id)" class="btn-pay-fine" title="Pagar Multa">Pagar Multa</button>
+              </div>
+
               <span v-else-if="loan.status === 'PENDING'" class="text-muted">
                   Aguardando bibliotecário...
               </span>
@@ -155,6 +177,8 @@ td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
 .badge-overdue { background: #f8d7da; color: #721c24; }
 .badge-returned { background: #e2e3e5; color: #383d41; }
 .badge-pending { background: #fff3cd; color: #856404; }
+.badge-fine-pending { background: #fca103; color: white; }
+
 
 .badge-rejected { 
     background: rgba(255, 0, 0, 0.1);
@@ -162,8 +186,12 @@ td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
     border: 1px solid rgba(255, 0, 0, 0.15);
 }
 
+.btn-group { display: inline-block; margin-right: 5px; }
+
 .btn-return { background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
 .btn-return:hover { background: #2980b9; }
+.btn-pay-fine { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+.btn-pay-fine:hover { background: #229954; }
 
 .text-red { color: #dc3545; }
 .text-muted { color: #999; font-style: italic; font-size: 0.9rem; }

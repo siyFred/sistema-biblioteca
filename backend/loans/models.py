@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from decimal import Decimal
 from books.models import Book
 from django.utils import timezone # Adicionar import para defaults se necessário
 
@@ -20,3 +22,38 @@ class Loan(models.Model):
 
     def __str__(self):
         return f"{self.user} pegou {self.book} ({self.get_status_display()})"
+
+    fine_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), verbose_name='Multa')
+    fine_last_updated = models.DateTimeField(null=True, blank=True, verbose_name='Última atualização da multa')
+    paid = models.BooleanField(default=False, verbose_name='Multa Paga')
+    paid_date = models.DateTimeField(null=True, blank=True, verbose_name='Data do Pagamento')
+
+    def apply_fines_until(self, when=None):
+        if when is None:
+            when = timezone.now()
+
+        if getattr(self, 'paid', False):
+            return
+
+        if self.due_date >= when:
+            return
+
+        from django.conf import settings as dj_settings
+        from decimal import Decimal
+
+        daily_str = getattr(dj_settings, 'FINE_DAILY_AMOUNT', '1.00')
+        try:
+            daily = Decimal(str(daily_str))
+        except Exception:
+            daily = Decimal('1.00')
+
+        last_point = self.fine_last_updated or self.due_date
+
+        days = (when.date() - last_point.date()).days
+        if days <= 0:
+            return
+
+        additional = daily * Decimal(days)
+        self.fine_amount = (self.fine_amount or Decimal('0.00')) + additional
+        self.fine_last_updated = when
+        return additional
