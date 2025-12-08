@@ -48,6 +48,7 @@
               <th>Solicitado em</th>
               <th>Vencimento</th>
               <th>Status</th>
+              <th>Multa</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -66,6 +67,16 @@
                   {{ translateStatus(loan.status) }}
                 </span>
               </td>
+
+              <td>
+                 <div v-if="loan.paid" class="text-green">
+                    <span class="status-badge paid">PAGO</span>
+                 </div>
+                 <div v-else-if="loan.fine_amount && parseFloat(loan.fine_amount) > 0" class="text-red font-bold">
+                    {{ formatCurrency(loan.fine_amount) }}
+                 </div>
+                 <span v-else class="text-muted">-</span>
+              </td>
               
               <td class="actions-cell">
                 <div v-if="loan.status === 'PENDING'" class="btn-group">
@@ -77,10 +88,16 @@
                   </button>
                 </div>
 
-                <div v-if="['ACTIVE', 'OVERDUE'].includes(loan.status)">
+                <div v-if="['ACTIVE', 'OVERDUE'].includes(loan.status)" class="btn-group">
                   <button @click="markReturned(loan.id)" class="btn-return">
                     📥 Receber
                   </button>
+                </div>
+
+                <div v-if="loan.fine_amount > 0 && !loan.paid" class="btn-group">
+                    <button @click="payLoan(loan.id)" class="btn-pay" title="Pagar Multa">
+                        💰 Pagar
+                    </button>
                 </div>
               </td>
             </tr>
@@ -168,9 +185,26 @@ const markReturned = async (id) => {
   }
 }
 
+const payLoan = async (id) => {
+    if (!(await swal.confirm('Confirmar Pagamento?', 'A dívida será quitada.'))) return
+    
+    try {
+        await api.post(`loans/${id}/pay/`)
+        swal.success('Pagamento Confirmado', 'Multa quitada com sucesso.')
+        fetchLoans()
+    } catch (e) {
+        swal.error('Erro', e.response?.data?.error || 'Erro ao processar pagamento.')
+    }
+}
+
 const formatDate = (date) => {
   if (!date) return '-'
   return new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
+const formatCurrency = (value) => {
+    if (!value) return '-'
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 }
 
 const translateStatus = (status) => {
@@ -213,15 +247,21 @@ td { padding: 12px 20px; border-bottom: 1px solid #f8f9fa; vertical-align: middl
 .status-badge.RETURNED { background: #d1ecf1; color: #0c5460; }
 .status-badge.OVERDUE { background: #f8d7da; color: #721c24; }
 .status-badge.REJECTED { background: #f2f2f2; color: #999; text-decoration: line-through; }
+.status-badge.paid { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
 
-.btn-group { display: flex; gap: 5px; }
+.btn-group { display: flex; gap: 5px; margin-top: 5px; }
 button { border: none; cursor: pointer; padding: 6px 12px; border-radius: 4px; font-size: 0.85rem; transition: opacity 0.2s; color: white; }
 button:hover { opacity: 0.9; }
 
 .btn-approve { background: #27ae60; }
 .btn-reject { background: #c0392b; }
 .btn-return { background: #2980b9; }
+.btn-pay { background: #8e44ad; }
 
 .text-muted { color: #ccc; }
+.text-red { color: #e74c3c; }
+.text-green { color: #27ae60; }
+.font-bold { font-weight: bold; }
+
 .loading-state, .empty-state { padding: 40px; text-align: center; color: #7f8c8d; font-size: 1.1rem; }
 </style>
