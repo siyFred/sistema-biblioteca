@@ -9,4 +9,4 @@ class LoanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Loan
         fields = ['id', 'user', 'book', 'book_title', 'loan_date', 'due_date', 'return_date', 'status']
-        read_only_fields = ['loan_date', 'return_date', 'status']
+        read_only_fields = ['loan_date', 'return_date', 'status', 'due_date']
