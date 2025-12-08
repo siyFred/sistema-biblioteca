@@ -54,8 +54,6 @@ class GoogleBooksService:
         is_deterministic_search = bool(query) or (genre and genre != "ALL") or (page > 1)
 
         if is_deterministic_search:
-            # MODO 1: SEQUENCIAL E DETERMINÍSTICO (AGORA COM MÚLTIPLOS FETCHS)
-            
             q = query.strip() if query else "subject:fiction" 
             if genre and genre != "ALL":
                 q = f"{q} subject:{genre}".strip()
@@ -82,25 +80,8 @@ class GoogleBooksService:
             return results[:max_results]
 
         else:
-            # MODO 2: RANDOMIZADO (PARA A PÁGINA INICIAL)
-            
-            rnd = random.Random(int(time.time())) 
-            
-            genres = rnd.sample(self.RANDOM_GENRES, k=4)
-            strategies = [f"subject:{g}" for g in genres]
-
-            results = []
-            for strat in strategies:
-                start_index = rnd.randint(0, 200) 
-                block = self._fetch(strat, start_index, max_results // 2)
-                for b in block:
-                    if b["google_id"] not in {x["google_id"] for x in results}:
-                        results.append(b)
-                if len(results) >= max_results:
-                    break
-
-            rnd.shuffle(results) 
-            return results[:max_results]
+            # Se não tem query nem filtro, não retorna nada do Google (comportamento limpo)
+            return []
 
     def _fetch(self, query: str, start: int, limit: int) -> List[Dict[str, Any]]:
         if not query: return []

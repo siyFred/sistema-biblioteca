@@ -51,65 +51,53 @@ class GlobalSearchView(APIView):
         query = request.query_params.get('q', '').strip()
         page = int(request.query_params.get('page', 1))
         genre = request.query_params.get('genre', 'ALL')
+        source = request.query_params.get('source', 'local') # local (default) | google
+        min_year = request.query_params.get('min_year')
+        max_year = request.query_params.get('max_year')
+        available = request.query_params.get('available')
+        ordering = request.query_params.get('ordering', '-created_at') # Default sorting
         
         google_service = GoogleBooksService()
         local_data = []
+
+        if source == 'google':
+             if not query: return Response([]) 
+             google_books = google_service.search_books(query, page, genre, MAX_API_LIMIT)
+             return Response(google_books)
+
+        local_queryset = Book.objects.all().order_by(ordering)
+
+        if query:
+            local_queryset = local_queryset.filter(
+                Q(title__icontains=query) | 
+                Q(author__icontains=query) | 
+                Q(isbn__icontains=query)
+            )
         
-        is_direct_search = bool(query)
+        if genre != 'ALL':
+                local_queryset = local_queryset.filter(genre__icontains=genre)
         
-        # --- DEFINIÇÃO DE LIMITES ---
-        if is_direct_search:
-            # MODO 1: BUSCA ESPECÍFICA (Maximiza a Page 1)
-            page_for_api = 1
-            max_results_api = MAX_API_LIMIT 
-            local_limit = MAX_API_LIMIT
-        else:
-            # MODO 2: NAVEGAÇÃO/FILTRO (Usa a paginação sequencial com limite máximo)
-            page_for_api = page
-            max_results_api = MAX_API_LIMIT
-            local_limit = MAX_API_LIMIT
-        # --- FIM DA DEFINIÇÃO ---
+        if min_year:
+            local_queryset = local_queryset.filter(publication_date__year__gte=min_year)
+        
+        if max_year:
+            local_queryset = local_queryset.filter(publication_date__year__lte=max_year)
 
-        if page_for_api == 1 or is_direct_search:
-            local_queryset = Book.objects.all().order_by('-created_at')
+        if available == 'true':
+            local_queryset = local_queryset.filter(available_copies__gt=0)
 
-            if query:
-                # Busca local usando Q (título, autor, isbn)
-                local_queryset = local_queryset.filter(
-                    Q(title__icontains=query) | 
-                    Q(author__icontains=query) | 
-                    Q(isbn__icontains=query)
-                )
-            
-            if genre != 'ALL':
-                 local_queryset = local_queryset.filter(genre__icontains=genre)
+        local_books = local_queryset
+        
+        start = (page - 1) * MAX_API_LIMIT
+        end = start + MAX_API_LIMIT
+        local_books_page = local_books[start:end]
 
-            local_books = local_queryset[:local_limit]
-            local_serializer = BookSerializer(local_books, many=True, context={'request': request})
-            local_data = local_serializer.data
-            for b in local_data: 
-                b['is_google'] = False
+        local_serializer = BookSerializer(local_books_page, many=True, context={'request': request})
+        local_data = local_serializer.data
+        for b in local_data: 
+            b['is_google'] = False
 
-        google_books = google_service.search_books(query, page_for_api, genre, max_results_api)
-
-        if local_data:
-            local_isbns = {b.get('isbn') for b in local_data if b.get('isbn')}
-            final_google = [gb for gb in google_books if gb.get('isbn') not in local_isbns]
-        else:
-            final_google = google_books
-
-        # --- ORDENAÇÃO POR RELEVÂNCIA/FILTRO DE TÍTULO ---
-        if is_direct_search and query:
-            query_lower = query.lower()
-            
-            google_top_match = [gb for gb in final_google if query_lower in gb.get('title', '').lower()]
-            google_other = [gb for gb in final_google if query_lower not in gb.get('title', '').lower()]
-            
-            final_list = google_top_match + local_data + google_other
-        else:
-            final_list = local_data + final_google
-
-        return Response(final_list)
+        return Response(local_data)
 
 class PurchaseRequestView(APIView):
     permission_classes = [permissions.IsAuthenticated]
