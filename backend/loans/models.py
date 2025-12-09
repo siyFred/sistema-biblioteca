@@ -11,6 +11,7 @@ class Loan(models.Model):
         ('ACTIVE', 'Ativo'),
         ('RETURNED', 'Devolvido'),
         ('OVERDUE', 'Atrasado'),
+        ('REJECTED', 'Rejeitado'),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='loans', verbose_name='Usuário')

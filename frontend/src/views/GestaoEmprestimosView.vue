@@ -22,6 +22,7 @@
           <option value="ACTIVE">📖 Em Andamento</option>
           <option value="OVERDUE">⚠️ Atrasados</option>
           <option value="RETURNED">✅ Devolvidos</option>
+          <option value="REJECTED">🚫 Rejeitados</option>
         </select>
       </div>
     </header>
