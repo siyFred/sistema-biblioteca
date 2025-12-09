@@ -11,6 +11,7 @@ const LoansView = () => import('../views/LoansView.vue')
 const ProfileView = () => import('../views/ProfileView.vue')
 const GestaoEmprestimosView = () => import('../views/GestaoEmprestimosView.vue')
 const ManageUsersView = () => import('../views/ManageUsers.vue')
+const ManageBooksView = () => import('../views/ManageBooksView.vue')
 const PurchaseRequestView = () => import('../views/PurchaseRequestView.vue')
 
 const router = createRouter({
@@ -37,29 +38,34 @@ const router = createRouter({
         { path: 'books', name: 'books', component: BooksView },
         { path: 'books/new', name: 'new-book', component: BookFormView },
         { path: 'books/:id', name: 'book-detail', component: BookDetailView },
-        { 
-            path: 'books/google/:googleId', 
-            name: 'google-book-detail', 
-            component: BookDetailView 
+        {
+          path: 'books/google/:googleId',
+          name: 'google-book-detail',
+          component: BookDetailView
         },
         { path: 'books/:id/edit', name: 'edit-book', component: BookFormView },
         { path: 'loans', name: 'loans', component: LoansView },
         { path: 'profile', name: 'profile', component: ProfileView },
-        
-        { 
-          path: 'admin/loans', 
-          name: 'admin-loans', 
-          component: GestaoEmprestimosView 
+
+        {
+          path: 'admin/loans',
+          name: 'admin-loans',
+          component: GestaoEmprestimosView
         },
-        { 
-          path: 'admin/users', 
-          name: 'admin-users', 
-          component: ManageUsersView 
+        {
+          path: 'admin/users',
+          name: 'admin-users',
+          component: ManageUsersView
         },
-        { 
-          path: 'admin/suggestions', 
-          name: 'admin-suggestions', 
-          component: PurchaseRequestView 
+        {
+          path: 'admin/suggestions',
+          name: 'admin-suggestions',
+          component: PurchaseRequestView
+        },
+        {
+          path: 'admin/books',
+          name: 'admin-books',
+          component: ManageBooksView
         }
       ]
     },
@@ -69,8 +75,8 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
-  if (to.meta.auth && !token) next('/') 
-  else if (to.meta.guest && token) next('/dashboard') 
+  if (to.meta.auth && !token) next('/')
+  else if (to.meta.guest && token) next('/dashboard')
   else next()
 })
 

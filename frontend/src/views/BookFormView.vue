@@ -24,8 +24,60 @@ const form = ref({
     cover_url: ''
 })
 const file = ref(null)
+const localPreview = ref('')
+const importIsbn = ref('')
+const loadingImport = ref(false)
 
-const handleFile = (e) => { file.value = e.target.files[0] }
+const handleFile = (e) => { 
+    const selected = e.target.files[0]
+    if (selected) {
+        file.value = selected
+        localPreview.value = URL.createObjectURL(selected)
+    }
+}
+
+const removeLocalFile = () => {
+    file.value = null
+    localPreview.value = ''
+}
+
+const fetchByIsbn = async () => {
+    if (!importIsbn.value) return
+    loadingImport.value = true
+    try {
+        // Usando a rota de busca global existente com filtro de source=google
+        const { data } = await api.get('books/search-global/', {
+            params: {
+                source: 'google',
+                q: `isbn:${importIsbn.value}`
+            }
+        })
+
+        if (data && data.length > 0) {
+            const bookData = data[0] // Pega o primeiro resultado
+            
+            form.value.title = bookData.title || ''
+            form.value.author = bookData.author || ''
+            form.value.isbn = bookData.isbn || importIsbn.value
+            form.value.publisher = bookData.publisher || ''
+            form.value.description = bookData.description || ''
+            form.value.publication_year = bookData.publication_date ? bookData.publication_date.split('-')[0] : ''
+            form.value.language = bookData.language || 'Português'
+            form.value.cover_url = bookData.cover_url || bookData.cover_image || ''
+            form.value.genre = bookData.genre || 'Geral'
+            
+            swal.success('Livro Encontrado!', `Dados de "${bookData.title}" carregados.`)
+        } else {
+            swal.warning('Atenção', 'Nenhum livro encontrado com este ISBN.')
+        }
+
+    } catch (e) {
+        console.error(e)
+        swal.error('Erro', 'Falha ao buscar livro.')
+    } finally {
+        loadingImport.value = false
+    }
+}
 
 const loadBookData = async () => {
     try {
@@ -143,10 +195,25 @@ onMounted(() => {
     
     <form @submit.prevent="submit" class="form-card">
       
-      <div v-if="form.cover_url && !file" class="cover-preview">
-          <img :src="form.cover_url" alt="Capa" height="100">
-          <small>Capa importada do Google</small>
+      <!-- IMPORTAR POR ISBN -->
+      <div v-if="!isEditing" class="import-section">
+          <h3>📥 Importar do Google Books</h3>
+          <div class="import-box">
+              <input 
+                  v-model="importIsbn" 
+                  placeholder="Digite o ISBN (apenas números)..." 
+                  @keyup.enter="fetchByIsbn"
+                  class="isbn-input"
+              />
+              <button type="button" @click="fetchByIsbn" class="btn-import" :disabled="loadingImport">
+                  {{ loadingImport ? 'Buscando...' : 'Buscar' }}
+              </button>
+          </div>
+          <small>Preenche automaticamente título, autor, capa e mais.</small>
+          <hr />
       </div>
+
+
 
       <div class="row">
         <div class="input-group">
@@ -198,10 +265,41 @@ onMounted(() => {
           <textarea v-model="form.description" rows="3"></textarea>
       </div>
       
-      <div class="input-group">
-          <label>Capa do Livro (Arquivo Local)</label>
-          <input type="file" @change="handleFile" accept="image/*" />
-          <small v-if="form.cover_url">Se enviar um arquivo, a capa do Google será ignorada.</small>
+      <div class="row">
+          <div class="input-group cover-section">
+              <label>Capa do Livro</label>
+              
+              <div class="cover-selection-container">
+                  <!-- Preview Area -->
+                  <div class="cover-display" v-if="localPreview || form.cover_url">
+                      <img :src="localPreview || form.cover_url" alt="Preview Capa" class="cover-img" />
+                      <div class="source-badge" :class="localPreview ? 'badge-local' : 'badge-google'">
+                          {{ localPreview ? '📁 Upload Local' : '🌎 Google Books' }}
+                      </div>
+                  </div>
+                  <div v-else class="no-cover">
+                      <span>Sem capa definida</span>
+                  </div>
+
+                  <!-- Controls -->
+                  <div class="cover-controls">
+                      <p v-if="!localPreview && form.cover_url" class="info-text">
+                          ℹ️ Esta capa foi sugerida pelo Google. Você pode <strong>manter ela</strong> ou enviar uma nova abaixo.
+                      </p>
+                      
+                      <div class="upload-actions">
+                          <label for="cover-upload" class="btn-upload">
+                              {{ localPreview ? 'Trocar Imagem' : (form.cover_url ? 'Substituir por Arquivo Local' : 'Escolher Capa') }}
+                          </label>
+                          <input id="cover-upload" type="file" @change="handleFile" accept="image/*" hidden />
+
+                          <button v-if="localPreview" @click="removeLocalFile" type="button" class="btn-link-danger">
+                              ⚠️ Cancelar upload (Usar capa do Google)
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
       </div>
 
       <button type="submit">{{ isEditing ? 'Atualizar Livro' : 'Salvar Livro' }}</button>
@@ -220,4 +318,40 @@ button { width: 100%; padding: 12px; background: #2c3e50; color: white; border: 
 button:hover { background: #34495e; }
 .cover-preview { text-align: center; margin-bottom: 15px; background: #f9f9f9; padding: 10px; border-radius: 5px; }
 .cover-preview img { display: block; margin: 0 auto 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+.import-section { margin-bottom: 25px; background: #f0f4f8; padding: 15px; border-radius: 8px; border: 1px dashed #cfd8dc; }
+.import-section h3 { margin: 0 0 10px 0; font-size: 1rem; color: #2c3e50; }
+.import-box { display: flex; gap: 10px; }
+.isbn-input { flex: 1; padding: 10px; border: 1px solid #cfd8dc; border-radius: 4px; }
+.btn-import { background: #42b883; color: white; padding: 0 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; height: 42px; margin-top: 0; width: auto; }
+.btn-import:hover { background: #3aa876; }
+.btn-import:disabled { background: #a5d6a7; cursor: wait; }
+.btn-import:hover { background: #3aa876; }
+.btn-import:disabled { background: #a5d6a7; cursor: wait; }
+
+/* Cover Section Styles */
+.cover-section { grid-column: span 2; }
+.cover-selection-container { 
+    display: flex; gap: 20px; align-items: flex-start; 
+    background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;
+}
+.cover-display { position: relative; width: 100px; height: 145px; flex-shrink: 0; background: #ddd; border-radius: 6px; overflow: hidden; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+.cover-img { width: 100%; height: 100%; object-fit: cover; }
+.no-cover { width: 100px; height: 145px; display: flex; align-items: center; justify-content: center; background: #e9ecef; color: #adb5bd; font-size: 0.8rem; text-align: center; border-radius: 6px; border: 2px dashed #ced4da; }
+
+.source-badge { position: absolute; bottom: 0; left: 0; right: 0; font-size: 0.65rem; text-align: center; padding: 3px; font-weight: bold; color: white; }
+.badge-google { background: rgba(66, 133, 244, 0.9); }
+.badge-local { background: rgba(52, 73, 94, 0.9); }
+
+.cover-controls { flex: 1; display: flex; flex-direction: column; gap: 10px; justify-content: center; min-height: 140px; }
+.info-text { margin: 0; font-size: 0.9rem; color: #6c757d; line-height: 1.4; }
+.btn-upload { display: inline-block; background: white; border: 1px solid #ced4da; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; color: #495057; font-weight: 600; text-align: center; transition: all 0.2s; width: fit-content; }
+.btn-upload:hover { background: #e9ecef; border-color: #adb5bd; }
+.btn-link-danger { background: none; border: none; color: #dc3545; font-size: 0.85rem; cursor: pointer; text-decoration: underline; padding: 0; text-align: left; width: fit-content; }
+.btn-link-danger:hover { color: #bd2130; }
+
+@media (max-width: 600px) {
+    .cover-selection-container { flex-direction: column; align-items: center; text-align: center; }
+    .cover-controls { align-items: center; }
+}
 </style>

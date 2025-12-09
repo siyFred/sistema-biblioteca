@@ -17,15 +17,15 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (username, password) => {
     try {
       const res = await api.post('login/', { username, password })
-      
+
       // 1. Salva o Token
       token.value = res.data.access
       localStorage.setItem('token', token.value)
-      
+
       // 2. Salva o Usuário e a Role (que agora vêm no login!)
-      user.value = res.data.user 
+      user.value = res.data.user
       localStorage.setItem('user', JSON.stringify(user.value))
-      
+
       return true
     } catch (error) {
       console.error(error)
@@ -38,8 +38,13 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     localStorage.removeItem('token')
     localStorage.removeItem('user')
-    window.location.href = '/' 
+    window.location.href = '/'
   }
 
-  return { token, user, isAuthenticated, isLibrarian, login, logout }
+  const updateUser = (userData) => {
+    user.value = userData
+    localStorage.setItem('user', JSON.stringify(user.value))
+  }
+
+  return { token, user, isAuthenticated, isLibrarian, login, logout, updateUser }
 })

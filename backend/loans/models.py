@@ -14,7 +14,7 @@ class Loan(models.Model):
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='loans', verbose_name='Usuário')
-    book = models.ForeignKey(Book, on_delete=models.PROTECT, related_name='loans', verbose_name='Livro')
+    book = models.ForeignKey(Book, on_delete=models.SET_NULL, related_name='loans', verbose_name='Livro', null=True, blank=True)
     loan_date = models.DateTimeField(auto_now_add=True, verbose_name='Data da Solicitação') 
     due_date = models.DateTimeField(null=True, blank=True, verbose_name='Data de Devolução Prevista') # Precisa ser null/blank
     return_date = models.DateTimeField(null=True, blank=True, verbose_name='Data da Devolução Real')

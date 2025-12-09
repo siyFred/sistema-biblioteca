@@ -89,7 +89,7 @@ class LoanViewSet(viewsets.ModelViewSet):
 
         return Response({'status': 'Solicitação rejeitada e estoque devolvido.'})
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def return_book(self, request, pk=None):
         loan = self.get_object()
 

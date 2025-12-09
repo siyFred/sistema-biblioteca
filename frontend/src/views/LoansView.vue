@@ -132,8 +132,8 @@ onMounted(fetchLoans)
             </td>
 
             <td class="actions-cell">
-              <div v-if="loan.status === 'ACTIVE' || loan.status === 'OVERDUE'" class="btn-group">
-                  <button @click="returnBook(loan.id)" class="btn-return" title="Devolver">Devolver</button>
+              <div v-if="loan.status === 'ACTIVE' || loan.status === 'OVERDUE'" class="text-posse">
+                  📖 Em Posse
               </div>
 
               <div v-if="loan.fine_amount > 0 && !loan.paid" class="btn-group">
@@ -195,5 +195,6 @@ td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
 
 .text-red { color: #dc3545; }
 .text-muted { color: #999; font-style: italic; font-size: 0.9rem; }
+.text-posse { color: #2c3e50; font-weight: bold; background: #e8f4f8; padding: 4px 8px; border-radius: 4px; display: inline-block; font-size: 0.85rem; }
 .loading-state, .empty-state { text-align: center; padding: 40px; color: #666; }
 </style>

@@ -281,21 +281,29 @@ const goToDetail = (book) => {
 
                 <div class="filter-section">
                     <h3>Ordenação</h3>
-                    <div class="radio-group">
-                        <label v-for="opt in SORT_OPTIONS" :key="opt.value" class="radio-label">
-                            <input type="radio" v-model="sortBy" :value="opt.value">
-                            {{ opt.label }}
-                        </label>
+                    <div class="sort-grid">
+                        <div 
+                            v-for="opt in SORT_OPTIONS" 
+                            :key="opt.value" 
+                            class="sort-card"
+                            :class="{ 'active': sortBy === opt.value }"
+                            @click="sortBy = opt.value"
+                        >
+                            <span class="sort-label">{{ opt.label }}</span>
+                            <div v-if="sortBy === opt.value" class="check-indicator">✓</div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="filter-section">
                     <h3>Gênero</h3>
-                    <select v-model="selectedGenre" class="input full-select">
-                        <option v-for="g in GENRES" :key="g.value" :value="g.value">
-                            {{ g.label }}
-                        </option>
-                    </select>
+                    <div class="select-wrapper">
+                         <select v-model="selectedGenre" class="input full-select">
+                            <option v-for="g in GENRES" :key="g.value" :value="g.value">
+                                {{ g.label }}
+                            </option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="filter-section">
@@ -306,7 +314,9 @@ const goToDetail = (book) => {
                     </div>
                 </div>
 
-                <button @click="applyFilters" class="btn btn-primary w-full">Aplicar Filtros</button>
+                <div class="modal-footer">
+                    <button @click="applyFilters" class="btn btn-primary w-full">Aplicar Filtros</button>
+                </div>
             </div>
         </div>
     </Transition>
@@ -444,5 +454,71 @@ const goToDetail = (book) => {
 
 /* MODAL OVERRIDES */
 .modal-content.narrow { max-width: 400px; }
+
+/* REFINED FILTER STYLES */
+.sort-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+.sort-card {
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.sort-card:hover { background: #e9ecef; }
+
+.sort-card.active {
+    background: white;
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 4px 10px rgba(66, 184, 131, 0.15);
+}
+
+.check-indicator {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--accent);
+    color: white;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.select-wrapper { position: relative; }
+.full-select { 
+    appearance: none; 
+    cursor: pointer; 
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); 
+    background-repeat: no-repeat; 
+    background-position: right 15px center; 
+    background-size: 16px; 
+    padding-right: 40px;
+}
+
+.modal-footer { margin-top: 25px; }
+
+.input-with-icon { position: relative; flex: 1; }
+.input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 1rem; z-index: 2; opacity: 0.7; }
+.year-input { padding-left: 40px; }
+
+.shadow-btn { box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2); transition: transform 0.2s; }
+.shadow-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(44, 62, 80, 0.3); }
 
 </style>

@@ -35,6 +35,9 @@ const handleLogout = () => {
             <router-link to="/admin/loans" class="admin-link">
                 👮 Gestão Empréstimos
             </router-link>
+            <router-link to="/admin/books" class="admin-link">
+                📚 Gestão Acervo
+            </router-link>
             <router-link to="/admin/users" class="admin-link">
                 👥 Gestão Usuários
             </router-link>
@@ -59,7 +62,9 @@ const handleLogout = () => {
 .app-layout { 
   display: flex; 
   height: 100vh; 
+  width: 100vw;
   background: var(--background);
+  overflow: hidden; /* Evita scrollbar na janela principal */
 }
 
 /* SIDEBAR */
@@ -72,6 +77,7 @@ const handleLogout = () => {
   padding: 25px; 
   box-shadow: 4px 0 15px rgba(0,0,0,0.1);
   z-index: 10;
+  overflow-y: auto; /* Permite scroll na sidebar se a tela for pequena */
 }
 
 .brand { 

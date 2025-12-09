@@ -70,8 +70,13 @@ const upgradeAccount = async () => {
     if (code) {
         try {
             await api.post('users/upgrade_role/', { admin_code: code })
+            
+            // Atualiza os dados do usuário no Store/LocalStorage
+            const res = await api.get('users/me/')
+            auth.updateUser(res.data)
+
             await Swal.fire('Sucesso!', 'Perfil atualizado. Bem-vindo, Bibliotecário!', 'success')
-            window.location.reload()
+            // window.location.reload() // Não é mais necessário recarregar
         } catch (e) {
             Swal.fire('Erro', 'Chave inválida.', 'error')
         }
@@ -86,11 +91,11 @@ onMounted(fetchProfile)
     
     <div class="profile-header card">
       <div class="avatar-circle">
-        {{ form.first_name ? form.first_name.charAt(0).toUpperCase() : auth.user?.username?.charAt(0).toUpperCase() }}
+        {{ form.first_name ? form.first_name.charAt(0).toUpperCase() : (auth.user?.username?.charAt(0).toUpperCase() || 'U') }}
       </div>
       <div class="header-info">
         <h2>{{ form.first_name }} {{ form.last_name }}</h2>
-        <p class="subtitle">@{{ form.username || auth.user?.username }}</p>
+        <p class="subtitle">@{{ form.username || (auth.user ? auth.user.username : 'Usuario') }}</p>
         <span class="role-badge" :class="auth.isLibrarian ? 'badge-admin' : 'badge-user'">
             {{ auth.isLibrarian ? '🛡️ Bibliotecário' : '📖 Leitor' }}
         </span>
