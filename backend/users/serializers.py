@@ -5,7 +5,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    admin_code = serializers.CharField(write_only=True, required=False) # Chave secreta
+    admin_code = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         model = User
