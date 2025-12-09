@@ -1,48 +1,130 @@
 # sistema-biblioteca
 
-Este projeto é um sistema de gerenciamento de biblioteca desenvolvido como requisito para as disciplinas de Backend e Frontend Frameworks.
+Este projeto é um sistema robusto de gerenciamento de biblioteca desenvolvido com foco em boas práticas de backend e frontend. O sistema permite o gerenciamento completo de livros, usuários e empréstimos, com controle de estoque, multas e notificações.
 
-* **Backend:** Django 5 (Django Rest Framework)
-* **Frontend:** Vue.js 3 (Composition API + Vite)
-* **Banco de Dados:** PostgreSQL 17
-* **Infraestrutura:** Docker & Docker Compose
-* **Documentação:** Swagger/OpenAPI (drf-spectacular)
+## Tecnologias Utilizadas
+
+### Backend
+*   **Django 5 & Django Rest Framework (DRF):** Framework principal.
+*   **PostgreSQL 17:** Banco de dados relacional.
+*   **Redis:** Cache e Message Broker.
+*   **Celery:** Processamento assíncrono (background tasks).
+*   **JWT (Simple JWT):** Autenticação segura.
+*   **Drf-spectacular:** Documentação OpenAPI/Swagger.
+
+### Frontend
+*   **Vue.js 3:** Framework reativo (Composition API).
+*   **Vite:** Build tool ultra-rápido.
+*   **Axios:** Cliente HTTP.
+
+### Infraestrutura
+*   **Docker & Docker Compose:** Containerização completa do ambiente.
 
 ---
 
-# Tasks
+## Como Rodar
 
-## MVP (Fase 1)
+Você pode rodar o projeto de duas formas: usando **Docker** (recomendado para simplicidade) ou **Localmente** (para desenvolvimento).
 
-### Infraestrutura e Configuração (Docker)
+### Opção 1: Com Docker (Recomendado)
 
-- [x] **Docker Containers:** Orquestração dos serviços (App, DB, Broker, Worker) com Healthchecks e dependências de inicialização (`depends_on`).
-- [x] **Persistência de Dados:** Configuração de volumes para persistência de dados do Postgres e Redis.
-- [x] **Segurança:** Segregação de variáveis sensíveis via `.env`.
+Certifique-se de ter o Docker e Docker Compose instalados.
 
-### Backend e Segurança
+1.  **Configure o ambiente:**
+    Crie um arquivo `.env` na raiz do projeto (baseado nas variáveis listadas abaixo).
 
-- [x] **Autenticação:** Implementação de JWT (Access + Refresh Tokens) com rotação de chaves.
-- [x] **Controle de Acesso (RBAC):** Definição de permissões granulares para Bibliotecários vs Usuários Comuns.
-- [x] **Documentação:** Geração automática de documentação OpenAPI 3.0 (Swagger) para consumo do Frontend.
+2.  **Execute o comando:**
+    ```bash
+    docker-compose up --build
+    ```
 
-### Lógica de Negócio e Integrações Externas
+3.  **Acesse:**
+    *   **Frontend:** http://localhost:5173
+    *   **Backend API:** http://localhost:8000/api/
+    *   **Swagger Docs:** http://localhost:8000/api/schema/swagger-ui/
 
-- [x] **Padrão/Pattern Service Layer:** Desacoplamento da lógica de negócio das Views/Controllers.
-- [x] **Adapter Externo (Google Books):** Serviço robusto de importação de metadados via ISBN, tratando timeouts e falhas de API externa.
-- [x] **Data Normalization:** Estratégia de armazenamento de capas (URLs vs Blobs) e categorização.
-- [x] **Advanced Filtering:** Implementação de busca textual (Full-Text Search) e filtros dinâmicos no endpoint de acervo.
+### Opção 2: Rodar Localmente
 
-### Performance e Concorrência
+#### Pré-requisitos
+*   Python 3.12+
+*   Node.js 18+
+*   PostgreSQL rodando localmente (ou via Docker)
+*   Redis rodando localmente (ou via Docker)
 
-- [x] **ACID Transactions:** Controle de integridade na criação de empréstimos.
-- [x] **Concurrency Control:** Implementação de `select_for_update` (Row locking) para evitar Race Conditions no estoque de livros.
-- [x] **Async Pipelines (Celery):** Processamento em background para notificações e relatórios pesados, evitando bloqueio da thread principal.
-- [x] **Caching:** Cacheamento de endpoints de leitura frequente (ex: Listagem de Livros) com invalidação inteligente.
+#### 1. Configurar Backend
 
-### Frontend e UX
+```bash
+cd backend
+# Crie e ative o ambiente virtual
+python -m venv venv
+# Windows
+.\venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
 
-- [ ] **Gerenciamento de Estado (Pinia):** Stores modulares para Auth e Carrinho de Empréstimos.
-- [ ] **Abstração API Client:** Configuração do Axios com Interceptors para injeção automática de Token e tratamento global de erros (401/403).
-- [ ] **Reutilização de Componentes:** Criação de componentes atômicos (Cards, Inputs, Modais) para padronização visual.
-- [ ] **Interface otimizada:** Interface otimizada para o fluxo de "Scan & Import" de livros via ISBN.
+# Instale as dependências
+pip install -r requirements.txt
+
+# Configure o .env na raiz (veja a seção Variáveis de Ambiente abaixo)
+# IMPORTANTE: Para rodar localmente, ajuste os hosts do DB e Redis:
+# POSTGRES_HOST=localhost
+# CELERY_BROKER_URL=redis://localhost:6379/0
+# CELERY_RESULT_BACKEND=redis://localhost:6379/0
+
+# Execute as migrações
+python manage.py migrate
+
+# Crie um superusuário
+python manage.py createsuperuser
+
+# Rode o servidor
+python manage.py runserver
+```
+
+**Para rodar o Celery (em outro terminal):**
+```bash
+cd backend
+.\venv\Scripts\activate
+celery -A sistema_biblioteca worker -l info
+```
+
+#### 2. Configurar Frontend
+
+```bash
+cd frontend
+# Instale as dependências
+npm install
+
+# Rode o servidor de dev
+npm run dev
+```
+
+---
+
+## Variáveis de Ambiente (.env)
+
+Crie um arquivo `.env` na RAIZ do projeto com as seguintes chaves. Ajuste os valores conforme seu ambiente.
+
+```ini
+# Django
+SECRET_KEY=sua_chave_secreta_aqui
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1,backend
+
+# Banco de Dados (PostgreSQL)
+POSTGRES_DB=biblioteca_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+# Se rodar com Docker: "db". Se rodar local: "localhost"
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+# Redis / Celery
+# Se rodar com Docker: "redis://redis:6379/0". Se rodar local: "redis://localhost:6379/0"
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+# Regras de Negócio
+# Valor da multa diária por atraso
+FINE_DAILY_AMOUNT=1.50
+```
