@@ -10,7 +10,8 @@ from .models import Loan
 from books.models import Book
 from .serializers import LoanSerializer
 from decimal import Decimal
-from django.db.models import Q 
+
+# Create your views here.
 
 class LoanViewSet(viewsets.ModelViewSet):
     serializer_class = LoanSerializer
@@ -101,7 +102,7 @@ class LoanViewSet(viewsets.ModelViewSet):
             book_locked.available_copies += 1
             book_locked.save()
             now = timezone.now()
-            # loan.apply_fines_until(now) # Se esta linha for necessária, mantenha-a
+            loan.apply_fines_until(now)
             loan.return_date = now
             loan.status = 'RETURNED'
             loan.save()
