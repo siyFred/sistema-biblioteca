@@ -78,6 +78,7 @@ with transaction.atomic():
 `Loan` trabalha com estados (`PENDING`, `ACTIVE`, `OVERDUE`, `RETURNED`, `REJECTED`) e campos financeiros (`fine_amount`, `paid`, `paid_date`, `fine_last_updated`).
 
 **Como isso resolve o problema:** centraliza regras de negócio no domínio e torna rastreável cada transição operacional e financeira.
+O fluxo segue `PENDING -> ACTIVE -> RETURNED` (ou `REJECTED`), com `OVERDUE` sendo aplicado por rotina diária; `fine_last_updated` é avançado tanto no job agendado quanto no fechamento do empréstimo (`return_book`), evitando recalcular dias já cobrados.
 
 ### 3) Busca híbrida (acervo local + Google Books)
 
