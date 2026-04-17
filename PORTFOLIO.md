@@ -75,7 +75,7 @@ with transaction.atomic():
 
 ### 2) Modelagem explícita do ciclo de vida de empréstimo
 
-`Loan` trabalha com estados (`PENDING`, `ACTIVE`, `OVERDUE`, `RETURNED`, `REJECTED`) e campos financeiros (`fine_amount`, `paid`, `paid_date`, `fine_last_updated`).
+`Loan` trabalha com estados que representam o ciclo de vida completo (`PENDING`, `ACTIVE`, `OVERDUE`, `RETURNED`, `REJECTED`) e campos financeiros (`fine_amount`, `paid`, `paid_date`, `fine_last_updated`).
 
 **Como isso resolve o problema:** centraliza regras de negócio no domínio e torna rastreável cada transição operacional e financeira.
 O fluxo segue `PENDING -> ACTIVE -> RETURNED` (ou `REJECTED`), com `OVERDUE` aplicado por rotina diária.
@@ -85,7 +85,7 @@ O fluxo segue `PENDING -> ACTIVE -> RETURNED` (ou `REJECTED`), com `OVERDUE` apl
 
 O sistema combina pesquisa local (dados institucionais) com integração externa para descoberta via Google Books API.
 
-**Benefício:** amplia catálogo percebido pelo usuário sem poluir o banco principal com dados não curados.
+**Benefício:** amplia catálogo percebido pelo usuário sem comprometer a qualidade do banco principal com dados não curados.
 Quando a API externa falha ou fica indisponível, o serviço retorna lista vazia e preserva a experiência baseada no acervo local, evitando indisponibilidade total da busca.
 
 ### 4) Infraestrutura reproduzível por contêineres
