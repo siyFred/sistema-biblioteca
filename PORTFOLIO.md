@@ -1,6 +1,6 @@
 ---
-title: "Sistema de Biblioteca Full-Stack com Automação de Empréstimos e Multas"
-description: "Plataforma de gestão de biblioteca com controle transacional de acervo, autenticação JWT e processamento assíncrono de regras de negócio."
+title: "KotarLib"
+description: "Sistema de Biblioteca Full-Stack e plataforma de gestão de biblioteca com controle transacional de acervo, autenticação JWT e processamento assíncrono de regras de negócio."
 stack: ["Python", "Django", "Django REST Framework", "PostgreSQL", "Redis", "Celery", "Vue 3", "Vite", "Docker", "JWT"]
 images: ["assets/capa.png"]
 featured-skills: ["Arquitetura de APIs REST", "Mensageria Assíncrona", "Modelagem de Domínio"]
