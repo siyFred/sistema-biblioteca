@@ -6,8 +6,6 @@ images: ["assets/capa.png"]
 featured-skills: ["Arquitetura de APIs REST", "Mensageria Assíncrona", "Modelagem de Domínio"]
 ---
 
-> `assets/capa.png` é um placeholder intencional para integração com o pipeline de imagens do portfólio.
-
 ## Visão Geral
 
 Sistema de gestão de biblioteca com foco em **operações reais de acervo**: cadastro e descoberta de livros, solicitações de empréstimo, aprovação por bibliotecário, devolução, cálculo de multas e governança de usuários por perfil.
