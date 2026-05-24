@@ -54,10 +54,12 @@ class GoogleBooksService:
         is_deterministic_search = bool(query) or (genre and genre != "ALL") or (page > 1)
 
         if is_deterministic_search:
-            q = query.strip() if query else "subject:fiction" 
+            q = query.strip() if query else "subject:fiction"
+            clean_query = q.replace('-', '').replace(' ', '')
+            if clean_query.isdigit():
+                q = f"isbn:{clean_query}"
             if genre and genre != "ALL":
                 q = f"{q} subject:{genre}".strip()
-
             results = []
             block_size = 20  # A API parece limitar a 20, mesmo pedindo 40
             num_fetches = (max_results + block_size - 1) // block_size # Ex: 40/20 = 2 fetches

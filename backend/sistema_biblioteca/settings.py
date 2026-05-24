@@ -202,3 +202,5 @@ CORS_ALLOWED_ORIGINS = [
 
 # Configuração de multas: valor diário fixo (em moeda local). Pode ser sobrescrito via .env
 FINE_DAILY_AMOUNT = os.getenv('FINE_DAILY_AMOUNT', '1.00')
+
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', '')
