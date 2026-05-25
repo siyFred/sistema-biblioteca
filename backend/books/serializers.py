@@ -16,6 +16,11 @@ class BookSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ('created_at', 'updated_at', 'available_copies', 'status_usuario')
 
+    def create(self, validated_data):
+        total_copies = validated_data.get('total_copies', 1)
+        validated_data['available_copies'] = total_copies
+        return super().create(validated_data)
+
     def get_status_usuario(self, obj):
         request = self.context.get('request')
         
